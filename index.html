@@ -1,1 +1,38 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard Tickets</title><style>body{font-family:Segoe UI,Arial;background:#f4f6f9;margin:0;padding:20px}h1{text-align:center} .top{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px}.card{background:white;padding:15px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1);text-align:center}.row{display:flex;justify-content:space-between;align-items:center;background:white;margin:8px 0;padding:12px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)}.min{border-left:8px solid #22c55e}.max{border-left:8px solid #ef4444}.mid{border-left:8px solid #3b82f6}.count{font-size:22px;font-weight:bold}button{padding:8px 12px;margin-left:4px;border:none;border-radius:6px;cursor:pointer}.plus{background:#22c55e;color:white}.minus{background:#ef4444;color:white}.auto{background:#2563eb;color:white;padding:12px 18px;font-size:16px}.reset{background:#f59e0b;color:white}</style></head><body><h1>🎫 Dashboard de Reparto de Tickets</h1><div class='top'><div class='card'><h3>Total Hoy</h3><div id='total'></div></div><div class='card'><h3>Siguiente</h3><div id='next'></div></div><div class='card'><button class='auto' onclick='assignNext()'>Asignar siguiente ticket</button></div></div><div id='list'></div><div style='text-align:center;margin-top:20px'><button class='reset' onclick='resetDay()'>Reiniciar día</button></div><script>const people=['Adria','Alvaro','Fabio','Lucas','Nicky','Nuria','Pau','Santiago','Yo'];const today=new Date().toLocaleDateString();let store=JSON.parse(localStorage.getItem('ticketsApp')||'{}');if(store.date!==today){store={date:today,data:Object.fromEntries(people.map(x=>[x,0]))};}function save(){localStorage.setItem('ticketsApp',JSON.stringify(store));render();}function assignNext(){let m=Math.min(...Object.values(store.data));let p=people.find(x=>store.data[x]===m);store.data[p]++;save();}function render(){let vals=Object.values(store.data);let min=Math.min(...vals),max=Math.max(...vals);document.getElementById('total').innerHTML=vals.reduce((a,b)=>a+b,0);document.getElementById('next').innerHTML=people.filter(x=>store.data[x]===min).join(', ');let rank=[...people].sort((a,b)=>store.data[a]-store.data[b]);let out='';rank.forEach(p=>{let cls=store.data[p]===min?'min':store.data[p]===max&&max>min?'max':'mid';out+=`<div class='row ${cls}'><strong>${p}</strong><span class='count'>${store.data[p]}</span><span><button class='plus' onclick="store.data['${p}']++;save()">+1</button><button class='minus' onclick="if(store.data['${p}']>0)store.data['${p}']--;save()">-1</button></span></div>`});document.getElementById('list').innerHTML=out;}function resetDay(){if(confirm('Reiniciar todos los contadores?')){for(let p of people)store.data[p]=0;save();}}render();</script></body></html>
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Dashboard Tickets Pro</title>
+<style>
+body{font-family:Segoe UI,Arial;background:#f4f6f9;margin:20px}
+h1{text-align:center}.card{background:#fff;padding:15px;border-radius:10px;margin:10px 0;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px;margin:5px 0;background:#fff;border-radius:8px}
+.min{border-left:6px solid #22c55e}.max{border-left:6px solid #ef4444}.mid{border-left:6px solid #3b82f6}
+button{padding:8px 12px;border:none;border-radius:6px;cursor:pointer}.plus{background:#22c55e;color:#fff}.minus{background:#ef4444;color:#fff}.main{background:#2563eb;color:#fff}.wheel{font-size:28px;text-align:center;font-weight:bold;color:#2563eb;padding:15px}
+</style>
+</head>
+<body>
+<h1>🎫 Dashboard de Reparto de Tickets</h1>
+<div class='card'><strong>Total tickets:</strong> <span id='total'>0</span><br><strong>Siguiente asignación:</strong> <span id='next'></span></div>
+<div class='card'><button class='main' onclick='assignNext()'>Asignar siguiente ticket</button> <button onclick='resetDay()'>Reiniciar día</button></div>
+<div id='list'></div>
+<div class='card'>
+<h2>🎯 Ruleta</h2>
+<button class='main' onclick='spinWheel()'>Girar ruleta</button>
+<button class='main' onclick='spinWheelAssign()'>Girar y asignar</button>
+<div id='winner' class='wheel'>Pulsa para girar</div>
+</div>
+<script>
+const people=['Adria','Alvaro','Fabio','Lucas','Nicky','Nuria','Pau','Santiago','Yo'];
+let data=JSON.parse(localStorage.getItem('ticketsDashboard')||'null')||Object.fromEntries(people.map(p=>[p,0]));
+function save(){localStorage.setItem('ticketsDashboard',JSON.stringify(data));render();}
+function render(){const vals=Object.values(data);const min=Math.min(...vals),max=Math.max(...vals);document.getElementById('total').innerText=vals.reduce((a,b)=>a+b,0);document.getElementById('next').innerText=Object.keys(data).filter(x=>data[x]===min).join(', ');let html='';[...people].sort((a,b)=>data[a]-data[b]).forEach(p=>{let c=data[p]==min?'min':data[p]==max&&max>min?'max':'mid';html+=`<div class='row ${c}'><b>${p}</b><span>${data[p]}</span><span><button class='plus' onclick="data['${p}']++;save()">+1</button> <button class='minus' onclick="if(data['${p}']>0)data['${p}']--;save()">-1</button></span></div>`});document.getElementById('list').innerHTML=html;}
+function assignNext(){let min=Math.min(...Object.values(data));let p=Object.keys(data).find(x=>data[x]===min);data[p]++;save();}
+function spinWheel(){let p=people[Math.floor(Math.random()*people.length)];document.getElementById('winner').innerText='🏆 '+p;}
+function spinWheelAssign(){let p=people[Math.floor(Math.random()*people.length)];data[p]++;save();document.getElementById('winner').innerText='🏆 '+p+' (+1 ticket)';}
+function resetDay(){if(confirm('¿Reiniciar contadores?')){for(let p of people)data[p]=0;save();}}
+render();
+</script>
+</body>
+</html>

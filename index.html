@@ -1,1 +1,37 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard Tickets con Ruleta</title><style>body{font-family:Segoe UI,Arial;background:#f4f6f9;padding:20px}h1{text-align:center}.top{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px}.card,.row{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}.card{padding:15px;text-align:center}.row{margin:8px 0;padding:12px;border-left:8px solid #3b82f6}.min{border-left-color:#22c55e}.max{border-left-color:#ef4444}.count{font-size:22px;font-weight:bold;min-width:30px}.plus{background:#22c55e}.minus{background:#ef4444}.auto{background:#2563eb}.reset{background:#f59e0b}button{color:#fff;border:none;border-radius:6px;padding:8px 12px;cursor:pointer}.roulette{font-size:40px;font-weight:bold;text-align:center;padding:25px;min-height:60px}</style></head><body><h1>🎫 Dashboard de Reparto de Tickets</h1><div class="top"><div class="card"><h3>Total Hoy</h3><div id="total"></div></div><div class="card"><h3>Siguientes candidatos</h3><div id="next"></div></div><div class="card"><button class="auto" onclick="spinRoulette()">🎲 Girar ruleta</button></div></div><div id="roulette" class="card roulette">Pulsa Girar ruleta</div><div id="list"></div><p style="text-align:center"><button class="reset" onclick="resetDay()">Reiniciar día</button></p><script>const people=['Adria','Alvaro','Fabio','Lucas','Nicky','Nuria','Pau','Santiago','Yo'];const today=new Date().toLocaleDateString();let store=JSON.parse(localStorage.getItem('ticketsApp')||'{}');if(store.date!==today)store={date:today,data:Object.fromEntries(people.map(x=>[x,0]))};function save(){localStorage.setItem('ticketsApp',JSON.stringify(store));render()}function spinRoulette(){let m=Math.min(...Object.values(store.data));let candidatos=people.filter(x=>store.data[x]===m);let box=document.getElementById('roulette');let i=0;let timer=setInterval(()=>{box.innerHTML='🎯 '+candidatos[i%candidatos.length];i++;},120);setTimeout(()=>{clearInterval(timer);let ganador=candidatos[Math.floor(Math.random()*candidatos.length)];box.innerHTML='🏆 '+ganador;store.data[ganador]++;save();},2500)}function render(){let vals=Object.values(store.data);let min=Math.min(...vals),max=Math.max(...vals);total.innerHTML=vals.reduce((a,b)=>a+b,0);next.innerHTML=people.filter(x=>store.data[x]===min).join(', ');let out='';[...people].sort((a,b)=>store.data[a]-store.data[b]).forEach(p=>{let cls=store.data[p]===min?'row min':store.data[p]===max&&max>min?'row max':'row';out+=`<div class="${cls}"><div style="display:flex;align-items:center;gap:4px"><button class="plus" onclick="store.data['${p}']++;save()">+1</button><button class="minus" onclick="if(store.data['${p}']>0)store.data['${p}']--;save()">-1</button><strong style="margin-left:10px">${p}</strong><span class="count">${store.data[p]}</span></div></div>`});list.innerHTML=out}function resetDay(){for(let p of people)store.data[p]=0;save()}render();</script></body></html>
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard Tickets</title>
+<style>
+body{font-family:Segoe UI,Arial;background:#f4f6f9;padding:20px}.top{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.card,.row{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}.card{padding:15px;text-align:center}.row{padding:10px;margin:6px 0}.count{font-size:22px;font-weight:bold}.section{margin-top:25px}.absent{opacity:.65}.btn{border:none;border-radius:6px;color:#fff;padding:6px 10px;cursor:pointer}.plus{background:#22c55e}.minus{background:#ef4444}.toggle{background:#6b7280}.auto{background:#2563eb}.roulette{font-size:34px;text-align:center;padding:20px}
+</style></head><body>
+<h1>🎫 Dashboard de Reparto de Tickets</h1>
+<div class='top'>
+<div class='card'><h3>Total Hoy</h3><div id='total'></div></div>
+<div class='card'><h3>Candidatos</h3><div id='next'></div></div>
+<div class='card'><button class='btn auto' onclick='spinRoulette()'>🎲 Girar ruleta</button></div>
+</div>
+<div id='roulette' class='card roulette'>Pulsa Girar ruleta</div>
+<div class='section'><h2>🟢 Activos</h2><div id='activeList'></div></div>
+<div class='section'><h2>🔴 Ausentes</h2><div id='absentList'></div></div>
+<script>
+const people=['Adria','Alvaro','Fabio','Lucas','Nicky','Nuria','Pau','Santiago','Yo'];
+const today=new Date().toLocaleDateString();
+let store=JSON.parse(localStorage.getItem('ticketsAppV2')||'{}');
+if(store.date!==today){store={date:today,data:{},active:{}};people.forEach(p=>{store.data[p]=0;store.active[p]=true;});}
+function save(){localStorage.setItem('ticketsAppV2',JSON.stringify(store));render();}
+function activePeople(){return people.filter(p=>store.active[p]);}
+function spinRoulette(){const activos=activePeople(); if(!activos.length)return; let m=Math.min(...activos.map(p=>store.data[p])); let candidatos=activos.filter(p=>store.data[p]===m); let r=document.getElementById('roulette'); let i=0; let t=setInterval(()=>{r.innerHTML='🎯 '+candidatos[i%candidatos.length];i++;},120); setTimeout(()=>{clearInterval(t); let g=candidatos[Math.floor(Math.random()*candidatos.length)]; r.innerHTML='🏆 '+g; store.data[g]++; save();},2500);}
+function toggle(p){store.active[p]=!store.active[p];save();}
+function render(){
+const activos=activePeople();
+document.getElementById('total').innerHTML=Object.values(store.data).reduce((a,b)=>a+b,0);
+if(activos.length){let m=Math.min(...activos.map(p=>store.data[p])); document.getElementById('next').innerHTML=activos.filter(p=>store.data[p]===m).join(', ');} else document.getElementById('next').innerHTML='Sin activos';
+let activeHtml='',absentHtml='';
+[...people].sort((a,b)=>store.data[a]-store.data[b]).forEach(p=>{
+const row=`<div class="row ${store.active[p]?'':'absent'}"><button class='btn plus' onclick="store.data['${p}']++;save()">+1</button> <button class='btn minus' onclick="if(store.data['${p}']>0)store.data['${p}']--;save()">-1</button> <button class='btn toggle' onclick="toggle('${p}')">${store.active[p]?'Ausente':'Activar'}</button> <strong>${p}</strong> <span class='count'>${store.data[p]}</span></div>`;
+if(store.active[p]) activeHtml+=row; else absentHtml+=row;
+});
+document.getElementById('activeList').innerHTML=activeHtml;
+document.getElementById('absentList').innerHTML=absentHtml||'<em>No hay ausentes</em>';
+}
+render();
+</script></body></html>

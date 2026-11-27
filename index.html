@@ -19,7 +19,7 @@ let store=JSON.parse(localStorage.getItem('ticketsAppV2')||'{}');
 if(store.date!==today){store={date:today,data:{},active:{}};people.forEach(p=>{store.data[p]=0;store.active[p]=true;});}
 function save(){localStorage.setItem('ticketsAppV2',JSON.stringify(store));render();}
 function activePeople(){return people.filter(p=>store.active[p]);}
-function spinRoulette(){const activos=activePeople(); if(!activos.length)return; let m=Math.min(...activos.map(p=>store.data[p])); let candidatos=activos.filter(p=>store.data[p]===m); let r=document.getElementById('roulette'); let i=0; let t=setInterval(()=>{r.innerHTML='🎯 '+candidatos[i%candidatos.length];i++;},120); setTimeout(()=>{clearInterval(t); let g=candidatos[Math.floor(Math.random()*candidatos.length)]; r.innerHTML='🏆 '+g; store.data[g]++; save();},2500);}
+function spinRoulette(){const activos=activePeople(); if(!activos.length)return; let m=Math.min(...activos.map(p=>store.data[p])); let candidatos=activos.filter(p=>store.data[p]===m); let r=document.getElementById('roulette'); let i=0; let t=setInterval(()=>{r.innerHTML='🎯 '+candidatos[i%candidatos.length];i++;},120); setTimeout(()=>{clearInterval(t); let g=candidatos[Math.floor(Math.random()*candidatos.length)]; r.innerHTML='🏆 '+g+'<br><small>Candidato sugerido (sin asignar ticket)</small>';},2500);}
 function toggle(p){store.active[p]=!store.active[p];save();}
 function render(){
 const activos=activePeople();
